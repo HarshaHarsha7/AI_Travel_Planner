@@ -1,5 +1,16 @@
+import os
+import subprocess
 import streamlit as st
-import ollama
+
+# Check if running on Streamlit Cloud and install ollama if needed
+if "STREAMLIT_SERVER" in os.environ:
+    try:
+        import ollama
+    except ImportError:
+        subprocess.run(["pip", "install", "ollama"])
+        import ollama  # Import after installation
+else:
+    import ollama  # Normal import for local development
 
 def generate_travel_itinerary(destination, budget, duration, interests):
     response = ollama.chat(
