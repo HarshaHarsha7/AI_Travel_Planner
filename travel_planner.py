@@ -2,35 +2,44 @@ import os
 import subprocess
 import streamlit as st
 
-# Check if running on Streamlit Cloud and install ollama if needed
-if "STREAMLIT_SERVER" in os.environ:
-    try:
-        import ollama
-    except ImportError:
-        subprocess.run(["pip", "install", "ollama"])
-        import ollama  # Import after installation
-else:
-    import ollama  # Normal import for local development
+# Install ollama only if it's not already installed
+try:
+    import ollama
+except ImportError:
+    subprocess.run(["pip", "install", "ollama"])
+    import ollama  # Import after installation
 
+# Function to generate travel itinerary
 def generate_travel_itinerary(destination, budget, duration, interests):
-    response = ollama.chat(
-        model="mistral",
-        messages=[{"role": "user", "content": f"Plan a trip to {destination} with a budget of {budget} for {duration} days. Interests: {interests}"}]
-    )
-    return response["message"]["content"]
+    try:
+        response = ollama.chat(
+            model="mistral",
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"Plan a trip to {destination} with a budget of {budget} for {duration} days. Interests: {interests}"
+                }
+            ]
+        )
+        return response["message"]["content"]
+    except Exception as e:
+        return f"⚠️ Error: {str(e)}"
 
 # Streamlit UI
+st.set_page_config(page_title="AI Travel Planner", page_icon="✈️", layout="centered")
 st.title("🌍 AI-Powered Travel Planner ✈️")
 
-destination = st.text_input("Enter your destination:")
-budget = st.text_input("Enter your budget:")
-duration = st.number_input("Enter trip duration (in days):", min_value=1, step=1)
-interests = st.text_area("What are your travel interests? (e.g., beaches, history, food)")
+# User Inputs
+destination = st.text_input("📍 Destination:")
+budget = st.text_input("💰 Budget ($):")
+duration = st.number_input("📅 Trip Duration (days):", min_value=1, step=1)
+interests = st.text_area("🎯 Travel Interests (e.g., beaches, history, food)")
 
-if st.button("Generate Itinerary"):
+# Generate Itinerary Button
+if st.button("📝 Generate Itinerary"):
     if destination and budget and duration and interests:
         itinerary = generate_travel_itinerary(destination, budget, duration, interests)
         st.subheader("🗺 Your AI-Generated Itinerary:")
         st.write(itinerary)
     else:
-        st.warning("Please fill in all fields before generating an itinerary.")
+        st.warning("⚠️ Please fill in all fields before generating an itinerary.")
